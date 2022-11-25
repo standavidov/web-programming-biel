@@ -1,0 +1,67 @@
+﻿@using GT.Models;
+@using GT.Client.ViewModels;
+
+@inject GroceryViewModel ViewModel
+
+<div class="row"><h1>Grocery List</h1></div>
+
+
+<div class="row pt-4">
+    <input name="newItem" type="text"
+           @ref="InputBox"
+           @attributes="inputAttributes"
+           @bind-value="@ViewModel.NewName"
+           @bind-value:event="oninput"
+           class="form-control col-md-2" />
+    <button class="btn btn-primary mx-2" @onclick="@(async () => await ViewModel.AddNewAsync())" >Add grocery</button>
+</div>
+<div class="row">
+    @if (ViewModel.ValidationErrors)
+    {
+        <GroceryErrors Errors="@ViewModel.Errors"></GroceryErrors>
+    }
+</div>
+
+<div class="row pt-2">
+    <input type="checkbox" @bind-value="ViewModel.ShowAll"/>
+    <span class="d-inline px-2"> Show all groceries</span>
+    
+</div>
+@if(groceries != null)
+{
+    <div class="row pt-4">
+    @foreach (var grocery in groceries)
+    {
+            <GroceryShow CurrentItem="@grocery" Remove="@(async () => await ViewModel.RemoveAsync(grocery))"
+                 MarkAsExpire="@(async () => await ViewModel.MarkGroceryAsExpireAsync(grocery))"></GroceryShow>
+    }
+    </div>
+}
+
+@code {
+    public ElementReference InputBox;
+    public List<Grocery> groceries;
+
+    public Dictionary<string, object> inputAttributes = new Dictionary<string, object>()
+    { };
+
+    protected override async Task OnInitializedAsync()
+    {
+        groceries = (await ViewModel.GroceryAsync()).ToList();
+        ViewModel.NewName = string.Empty;
+        ViewModel.PropertyChanged += async (obj, ev) =>
+        {
+            if (ev.PropertyName.Equals(nameof(ViewModel.GroceryAsync)))
+            {
+                groceries = (await ViewModel.GroceryAsync()).ToList();
+            }
+            await InvokeAsync(() =>
+            {
+                StateHasChanged();
+            });
+        };
+
+        await base.OnInitializedAsync();
+    }
+
+}

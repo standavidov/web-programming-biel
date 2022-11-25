@@ -4,28 +4,28 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Threading.Tasks;
-using WOM.Models;
+using GT.Models;
 
-namespace WOM.Client.Data
+namespace GT.Client.Data
 {
-    public class WorkOutSimpleData : IWorkOutDataAccess
+    public class GrocerySimpleData : IGroceryDataAccess
     {
         private readonly IODataClient _client;
 
-        public WorkOutSimpleData(HttpClient client)
+        public GrocerySimpleData(HttpClient client)
         {
             client.BaseAddress = new Uri("https://localhost:55197/odata");
             ODataClientSettings settings = new(client);
             _client = new ODataClient(settings);
         }
 
-        public async Task<WorkOut> AddAsync(WorkOut item)
+        public async Task<Grocery> AddAsync(Grocery item)
         {
             List<ValidationResult> results = new();
             ValidationContext validation = new(item);
             if (Validator.TryValidateObject(item, validation, results))
             {
-                return await _client.For<WorkOut>().Set(item).InsertEntryAsync();
+                return await _client.For<Grocery>().Set(item).InsertEntryAsync();
             }
             else
             {
@@ -33,28 +33,28 @@ namespace WOM.Client.Data
             }
         }
 
-        public async Task<bool> DeleteAsync(WorkOut item)
+        public async Task<bool> DeleteAsync(Grocery item)
         {
-            await _client.For<WorkOut>().Key(item.Id).DeleteEntryAsync();
+            await _client.For<Grocery>().Key(item.Id).DeleteEntryAsync();
             return true;
         }
 
-        public async Task<IEnumerable<WorkOut>> GetAsync(bool showAll)
+        public async Task<IEnumerable<Grocery>> GetAsync(bool showAll)
         {
-            var helper = _client.For<WorkOut>();
+            var helper = _client.For<Grocery>();
             if (!showAll)
             {
-                helper.Filter(workOut => !workOut.Complete);
+                helper.Filter(grocery => !grocery.Expire);
             }
             else
             {
-                helper.OrderBy(workOut => workOut.Description);
+                helper.OrderBy(grocery => grocery.Name);
             }
 
             return await helper.FindEntriesAsync();
         }
 
-        public async Task<WorkOut> UpdateAsync(WorkOut item)
+        public async Task<Grocery> UpdateAsync(Grocery item)
         {
             List<ValidationResult> results = new();
             ValidationContext validation = new(item);
@@ -62,7 +62,7 @@ namespace WOM.Client.Data
             {
                 try
                 {
-                    await _client.For<WorkOut>().Key(item.Id).Set(item).UpdateEntryAsync();
+                    await _client.For<Grocery>().Key(item.Id).Set(item).UpdateEntryAsync();
                 }
                 catch (Exception)
                 {
